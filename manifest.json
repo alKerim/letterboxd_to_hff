@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "HFF Library Availability for Letterboxd",
+  "version": "1.0.0",
+  "description": "Shows HFF Munich library availability for films on Letterboxd",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://webopac.hff-muc.de/*",
+    "https://letterboxd.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://letterboxd.com/*"],
+      "js": ["utils.js", "content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/random.svg",
+    "48": "icons/random.svg",
+    "128": "icons/random.svg"
+  },
+  "action": {
+    "default_title": "HFF Library Availability",
+    "default_popup": "popup.html"
+  }
+} 

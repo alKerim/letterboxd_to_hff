@@ -1,0 +1,169 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- START jsp/common/metaHeader.jsp -->
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" 
+ xml:lang="" 
+ lang=""
+> 
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="pragma" content="no-cache" />
+  <meta http-equiv="expires" content="0" />
+  <meta http-equiv="cache-control" content="no-cache" />
+
+<!--  Wegen MobileOPAC auskommentiert 21.07.2010 Li
+  <link rel="stylesheet" href="/webOPACClient.hffsis/jsp/common/infoguide.css"  type="text/css" />
+-->
+
+<!--Beginn favicon.ico statt OCLC.ico -->
+  <link rel="shortcut icon" href="/webOPACClient.hffsis/images/favicon.ico" />
+<!-- favicon.ico -->
+
+  <link rel="stylesheet" href="/webOPACClient.hffsis/js/jquery/jquery.all.css"/>
+  <link rel="stylesheet" href="/webOPACClient.hffsis/jsp/common/alerts.css"/>
+  
+  <script src="/webOPACClient.hffsis/js/jquery/jquery-1.4.2-min.js" type="text/javascript"><!-- --></script>
+  <!-- AjaxQ is a jQuery plugin that implements AJAX request queueing mechanism.  -->
+  <script src="/webOPACClient.hffsis/js/jquery.ajaxq-0.0.1.js" type="text/javascript"><!-- --></script>
+  <script src="/webOPACClient.hffsis/js/jquery/jquery-ui-1.7.2.js" type="text/javascript"><!--  --></script>
+  <script src="/webOPACClient.hffsis/js/jquery/extensions/jquery.infoguide.js" type="text/javascript"><!-- --></script>
+  <script src="/webOPACClient.hffsis/js/ig.utils.js" type="text/javascript"><!-- --></script>
+  <script src="/webOPACClient.hffsis/js/jquery/extensions/jquery.autocomplete.js" type="text/javascript"><!-- --></script>
+  <script src="/webOPACClient.hffsis/js/jstorage.js" type="text/javascript"><!-- --></script>
+  <script src="/webOPACClient.hffsis/js/common.js" type="text/javascript"><!-- --></script>
+
+
+  <script type="text/javascript">/* <![CDATA[ */
+if (!(typeof globalSettings == "object" && globalSettings instanceof Map)) globalSettings = new Map();
+globalSettings.add({
+"imagePath": "/webOPACClient.hffsis/images"
+});
+if (!(typeof i18n == "object" && i18n instanceof Map)) i18n = new Map();
+i18n.add({
+"common.header.loading.icon.alt": "Laden",
+"search.searchfield.suggestion.hits": "???de.search.searchfield.suggestion.hits???"
+});
+/* ]]> */</script>
+
+<!-- Beginn colorbox fuer qr-codes (benoetigt jquery) 06.06.11 wehringer -->
+<script src="./jsp/common/colorbox/jquery.colorbox.js" type="text/javascript" language="javascript"></script>
+<link type="text/css" media="screen" rel="stylesheet" href="./jsp/common/colorbox/colorbox.css" />
+<!-- Ende colorbox -->
+
+<!--Beginn MobileOPAC 21.07.2010 Li -->
+
+
+
+
+
+
+
+ 
+
+
+
+   
+   
+   
+      
+         
+         
+         
+           
+              
+              
+                 
+              
+              
+           
+         
+      
+   
+
+
+
+   
+   
+      
+      <link rel="stylesheet" href="/webOPACClient.hffsis/jsp/common/infoguide.css"  type="text/css" />
+      <!--[if IE]>  <link rel="stylesheet" href="/webOPACClient.hffsis/jsp/common/infoguide.css"  type="text/css" />  <![endif]-->
+   
+    
+   
+   
+
+  
+
+<!-- Ende MobileOPAC -->
+
+  <!--[if IE 7]>
+    <style type="text/css">
+      #tab-content{margin-top:5px;}
+      select {height:auto;}
+      #searchfield input#f1 {width:10em;}
+    </style>
+  <![endif]-->
+  
+  <title>
+    
+      
+    
+  </title>
+</head>
+<!-- END of jsp/common/metaHeader.jsp -->
+
+<!-- START jsp/error.jsp -->
+<style type="text/css">
+body {text-align:center;} /*Seitenzentrierung f�r �ltere Browser*/
+.box {background: #fff; border: 1px solid #ccc; margin:0 auto; min-height: 100px; text-align:left; width:400px;margin-top:2em;}
+</style>
+
+<body>
+<div class="box error">
+	<div class="box-header">
+		<div class="box-right">
+			
+			
+				<a href="https://webopac.hff-muc.de/webOPACClient.hffsis/start.do?Login=wohff" class="subnavi" title="Neu starten">Neu starten</a>
+			
+		</div>
+
+		<h2>Fehler</h2>
+	</div>
+	
+	<div class="cleaner"></div>
+	
+		
+			<p>Diese Sitzung ist nicht mehr gültig!<p>
+		
+	
+	
+	
+</div><!-- box -->
+</body>
+<!-- END jsp/error.jsp --> 
+<!-- START jsp/common/metaFooter.jsp -->
+</html>
+<!-- END of jsp/common/metaFooter.jsp -->
+
+
+
+
