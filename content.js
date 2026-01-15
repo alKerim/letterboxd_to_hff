@@ -91,7 +91,7 @@ class HFFAvailabilityChecker {
     const isSingleFilmPage = this.isSingleFilmPage();
     
     if (isSingleFilmPage) {
-      console.log('🎬 Single film page detected, only scanning main film');
+      console.log('🎬 Single film page detected, scanning main film + similar films');
       this.processSingleFilmPage();
       return;
     }
@@ -129,16 +129,16 @@ class HFFAvailabilityChecker {
    * Check if we're on a single film page
    */
   isSingleFilmPage() {
-    // Check URL pattern for single film pages
+    // Check URL pattern for single film pages: /film/slug/ or /film/slug
     const url = window.location.href;
-    const singleFilmPattern = /\/film\/[^\/]+\/\d{4}\/?$/;
+    const singleFilmPattern = /letterboxd\.com\/film\/[^\/]+\/?$/;
     
     if (singleFilmPattern.test(url)) {
       return true;
     }
     
-    // Also check for the main film poster/header
-    const mainFilmHeader = document.querySelector('.film-header, .film-poster-container, .poster-container');
+    // Also check for the main film header section (specific to Letterboxd film pages)
+    const mainFilmHeader = document.querySelector('#featured-film-header, .film-detail-content, section.film-header-group');
     if (mainFilmHeader) {
       return true;
     }
@@ -147,50 +147,141 @@ class HFFAvailabilityChecker {
   }
 
   /**
-   * Process a single film page
+   * Process a single film page - handles the main film AND continues to process similar films
    */
   processSingleFilmPage() {
+    // First, process the main film on this page
+    this.processMainFilm();
+    
+    // Then also process other films on the page (similar films, popular lists, etc.)
+    this.processOtherFilmsOnPage();
+  }
+  
+  /**
+   * Process the main film on a detail page
+   */
+  processMainFilm() {
     // Look for the main film title in the page header
+    // Letterboxd uses various selectors for the film title
     const titleSelectors = [
-      'h1.film-title',
-      '.film-header h1',
-      '.film-poster-container h1',
+      '#featured-film-header h1',
+      '.headline-1',
+      'section.film-header-group h1',
+      '.film-detail-content h1',
+      'h1[itemprop="name"]',
       'h1'
     ];
     
     let filmTitle = null;
     let filmYear = null;
+    let mainElement = null;
     
     // Try to get the film title from the page
     for (const selector of titleSelectors) {
       const titleElement = document.querySelector(selector);
       if (titleElement) {
         const titleText = titleElement.textContent.trim();
-        if (titleText && titleText.length > 0) {
+        // Skip if it's the Letterboxd branding
+        if (titleText && titleText.length > 0 && !titleText.includes('Letterboxd')) {
           filmTitle = titleText;
+          mainElement = titleElement;
           break;
         }
       }
     }
     
-    // Try to get the year from the URL or page
-    const urlMatch = window.location.href.match(/\/film\/[^\/]+\/(\d{4})/);
-    if (urlMatch) {
-      filmYear = urlMatch[1];
+    // Try to get the year from the page (Letterboxd shows it as a link near the title)
+    const yearSelectors = [
+      '.releaseyear a',
+      'a[href*="/films/year/"]',
+      'small.number a',
+      '.film-header-group small a'
+    ];
+    
+    for (const selector of yearSelectors) {
+      const yearElement = document.querySelector(selector);
+      if (yearElement) {
+        const yearMatch = yearElement.textContent.match(/\d{4}/);
+        if (yearMatch) {
+          filmYear = yearMatch[0];
+          break;
+        }
+      }
     }
     
-    if (filmTitle) {
-      console.log(`🎬 Single film page: "${filmTitle}" ${filmYear ? `(${filmYear})` : ''}`);
+    // Also try to extract from the page title
+    if (!filmYear) {
+      const titleMatch = document.title.match(/\((\d{4})\)/);
+      if (titleMatch) {
+        filmYear = titleMatch[1];
+      }
+    }
+    
+    if (filmTitle && mainElement) {
+      console.log(`🎬 Main film on page: "${filmTitle}" ${filmYear ? `(${filmYear})` : ''}`);
       
-      // Create a virtual element for processing
-      const virtualElement = {
-        dataset: { filmTitle, filmYear },
-        textContent: filmTitle
-      };
-      
-      this.processFilmElement(virtualElement);
+      // Mark main element as processed
+      if (!this.processedElements.has(mainElement)) {
+        this.processedElements.add(mainElement);
+        
+        // Add loading indicator to the film header area
+        this.addLoadingIndicatorToMainFilm(mainElement);
+        
+        // Check availability
+        const filmInfo = { title: filmTitle, year: filmYear };
+        this.checkAvailability(filmInfo, mainElement);
+      }
     } else {
-      console.log('❌ Could not find film title on single film page');
+      console.log('❌ Could not find main film title on page');
+    }
+  }
+  
+  /**
+   * Process other films on a single film page (similar films, popular lists, etc.)
+   */
+  processOtherFilmsOnPage() {
+    const filmSelectors = [
+      '.film-poster',
+      '.poster',
+      '[data-target-link*="/film/"]',
+      '.poster-container'
+    ];
+
+    let newElements = 0;
+
+    for (const selector of filmSelectors) {
+      const elements = document.querySelectorAll(selector);
+      
+      elements.forEach(element => {
+        if (!this.processedElements.has(element)) {
+          this.processFilmElement(element);
+          newElements++;
+        }
+      });
+    }
+
+    if (newElements > 0) {
+      console.log(`🎬 Also processing ${newElements} other films on page (similar films, lists, etc.)`);
+    }
+  }
+  
+  /**
+   * Add loading indicator to the main film on a detail page
+   */
+  addLoadingIndicatorToMainFilm(element) {
+    // Find a suitable place to add the indicator (near the title)
+    const headerSection = element.closest('section') || element.parentElement;
+    if (headerSection) {
+      const indicator = document.createElement('div');
+      indicator.className = 'hff-loading-indicator hff-main-film-indicator';
+      indicator.innerHTML = `
+        <span class="hff-loading-spinner"></span>
+        <span class="hff-loading-text">Checking HFF library...</span>
+      `;
+      indicator.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; font-size: 14px; color: #99aabb;';
+      
+      // Insert after the title element
+      element.insertAdjacentElement('afterend', indicator);
     }
   }
 
@@ -393,23 +484,23 @@ class HFFAvailabilityChecker {
    * @param {Element} element - The film element
    */
   removeLoadingIndicator(element) {
-    // Handle virtual elements for single film pages
-    if (element.dataset && element.dataset.filmTitle) {
-      // For single film pages, remove indicator from the page header
-      const headerElement = document.querySelector('.film-header, .film-poster-container, h1');
-      if (headerElement) {
-        const indicator = headerElement.querySelector('.hff-loading-indicator');
-        if (indicator) {
-          indicator.remove();
-        }
-      }
+    // Check for main film indicator (inserted after element)
+    const nextSibling = element.nextElementSibling;
+    if (nextSibling && nextSibling.classList.contains('hff-main-film-indicator')) {
+      nextSibling.remove();
       return;
     }
     
+    // Check for indicator within element
     const indicator = element.querySelector('.hff-loading-indicator');
     if (indicator) {
       indicator.remove();
+      return;
     }
+    
+    // Also check for indicators anywhere on the page with main-film class
+    const mainIndicators = document.querySelectorAll('.hff-main-film-indicator');
+    mainIndicators.forEach(ind => ind.remove());
   }
 
   /**
@@ -418,30 +509,49 @@ class HFFAvailabilityChecker {
    * @param {Object} result - Availability result
    */
   addAvailabilityIndicator(element, result) {
-    // Handle virtual elements for single film pages
-    if (element.dataset && element.dataset.filmTitle) {
-      // For single film pages, add indicator to the page header
-      const headerElement = document.querySelector('.film-header, .film-poster-container, h1');
-      if (headerElement) {
-        const indicator = document.createElement('div');
-        indicator.className = 'hff-availability-indicator';
-        indicator.title = 'Available at HFF Mediathek';
-        
-        if (result.link) {
-          indicator.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            window.open(result.link, '_blank');
-          });
-          indicator.style.cursor = 'pointer';
-        }
-        
-        headerElement.style.position = 'relative';
-        headerElement.appendChild(indicator);
-      }
+    // Check if this is the main film title (h1/heading element)
+    const isMainFilm = element.tagName === 'H1' || element.classList.contains('headline-1') || 
+                       element.closest('#featured-film-header') || element.closest('.film-header-group');
+    
+    if (isMainFilm) {
+      // For main film on detail page, add a styled badge next to the title
+      const indicator = document.createElement('a');
+      indicator.className = 'hff-availability-indicator hff-main-film-badge';
+      indicator.innerHTML = '✓ Available at HFF';
+      indicator.title = 'Click to view in HFF Mediathek';
+      indicator.href = result.link || '#';
+      indicator.target = '_blank';
+      indicator.style.cssText = `
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: 12px;
+        padding: 4px 10px;
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 4px;
+        text-decoration: none;
+        vertical-align: middle;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: transform 0.2s, box-shadow 0.2s;
+      `;
+      indicator.addEventListener('mouseenter', () => {
+        indicator.style.transform = 'scale(1.05)';
+        indicator.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+      });
+      indicator.addEventListener('mouseleave', () => {
+        indicator.style.transform = 'scale(1)';
+        indicator.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+      });
+      
+      // Insert after the title element
+      element.insertAdjacentElement('afterend', indicator);
       return;
     }
     
+    // For regular film posters
     const indicator = document.createElement('div');
     indicator.className = 'hff-availability-indicator';
     indicator.title = 'Available at HFF Mediathek';
