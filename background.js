@@ -7,8 +7,8 @@ const searchCache = new Map();
 let sessionInitialized = false;
 let sessionInitPromise = null;
 
-// Request throttling - limit concurrent requests (5 is a good balance)
-const MAX_CONCURRENT_REQUESTS = 5;
+// Request throttling - limit concurrent requests
+const MAX_CONCURRENT_REQUESTS = 8;
 let activeRequests = 0;
 const requestQueue = [];
 
@@ -145,8 +145,8 @@ async function performSearch(searchString, encodedSearch, title, year) {
   // Wait for available slot to avoid overwhelming the server
   await waitForRequestSlot();
   
-  // Small delay between requests (200ms) to be nice to the HFF server
-  await delay(200);
+  // Small delay between requests (100ms) to be nice to the HFF server
+  await delay(100);
   
   try {
     return await performSearchInternal(searchString, encodedSearch, title, year);
@@ -273,62 +273,186 @@ function parseSearchResults(html, searchTitle) {
       console.log('📋 First 5 matches:', allMatches.slice(0, 5).map(m => m.text));
     }
     
-    // First pass: look for exact or close matches
-    for (const match of allMatches) {
-      const linkTextLower = match.text.toLowerCase();
+    // Filter to only DVD and Blu-Ray results
+    // The HFF results show media type info in HTML - look for DVD-Video, DVD, Blu-Ray
+    console.log(`📀 Starting DVD/Blu-ray filter on ${allMatches.length} results...`);
+    const beforeDvdFilter = allMatches.length;
+    const dvdFilteredMatches = allMatches.filter(match => {
+      const hrefIndex = html.indexOf(match.href);
+      if (hrefIndex === -1) return false;
       
-      // Check if this result contains our search title
-      if (linkTextLower.includes(searchTitleLower) || searchTitleLower.includes(linkTextLower)) {
-        console.log(`✅ Found matching title: "${match.text}"`);
+      // Look at HTML around this result (search backwards more to catch media type)
+      const startPos = Math.max(0, hrefIndex - 1500);
+      const endPos = Math.min(html.length, hrefIndex + 500);
+      const nearbyHtml = html.substring(startPos, endPos);
+      
+      // Check for DVD or Blu-Ray in various formats
+      // Can appear as: DVD-Video, DVD, Blu-Ray, Blu-ray, alt="DVD"
+      const isDvdOrBluray = /(?:DVD(?:-Video)?|Blu-?[Rr]ay)/i.test(nearbyHtml);
+      
+      if (!isDvdOrBluray) {
+        console.log(`📀 Filtering out: "${match.text}" (not DVD/Blu-ray)`);
+      }
+      return isDvdOrBluray;
+    });
+    
+    // Fallback: if filter removed everything but there were results, keep original
+    if (dvdFilteredMatches.length === 0 && beforeDvdFilter > 0) {
+      console.log(`⚠️ DVD filter removed all ${beforeDvdFilter} results - using originals as fallback`);
+      // DON'T use fallback - we ONLY want DVD/Blu-ray results
+      // Just log and continue with empty results
+      allMatches = [];
+      console.log(`📀 No DVD/Blu-ray found, returning no results`);
+    } else {
+      allMatches = dvdFilteredMatches;
+      console.log(`📀 After DVD/Blu-ray filter: ${allMatches.length} of ${beforeDvdFilter} results`);
+    }
+    
+    // Calculate similarity score between two titles
+    const calculateTitleSimilarity = (title1, title2) => {
+      const t1 = title1.toLowerCase().trim();
+      const t2 = title2.toLowerCase().trim();
+      
+      // Exact match
+      if (t1 === t2) return 100;
+      
+      // Remove punctuation but keep accented chars, normalize spaces
+      const normalize = (s) => s.replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim().toLowerCase();
+      const n1 = normalize(t1);
+      const n2 = normalize(t2);
+      
+      if (n1 === n2) return 95;
+      
+      // Get all words (filter out very short ones like "a", "o", "le", etc.)
+      const getWords = (s) => s.split(' ').filter(w => w.length > 2);
+      const searchWords = getWords(n1);
+      const resultWords = getWords(n2);
+      
+      // For SINGLE WORD searches, be VERY strict
+      if (searchWords.length === 1) {
+        const searchWord = searchWords[0];
         
-        // Check availability in the full HTML (the text appears somewhere in the response)
-        const isAvailable = html.includes('ausleihbar') || 
-                           html.includes('verfügbar') ||
-                           html.includes('available');
+        // Result must ALSO be a single significant word, or search word must be at the BEGINNING
+        if (resultWords.length === 1 && resultWords[0] === searchWord) {
+          return 90; // Both are single words that match exactly
+        }
         
-        console.log(`📊 Availability check: ${isAvailable ? 'AVAILABLE' : 'NOT AVAILABLE'}`);
+        // Check if result starts with exactly the search term (as a standalone title)
+        // "Lucky" should match "Lucky (2017)" but NOT "Lucky Luke" or "O Lucky Man"
+        const resultStartsWithSearch = n2 === n1 || 
+                                        n2.startsWith(n1 + ' ') ||
+                                        n2.match(new RegExp(`^${n1}\\s*[\\(\\[\\d]`)); // Lucky (2017) or Lucky 2017
         
-        // Use the start.do URL with Query parameter - this creates a fresh session AND shows results
-        // Format: start.do?Branch=00&Query=-1="TITLE" (where -1 means search all fields)
-        const searchLink = `https://webopac.hff-muc.de/webOPACClient.hffsis/start.do?Branch=00&Query=-1=%22${encodeURIComponent(match.text)}%22`;
+        if (resultStartsWithSearch) {
+          // But also check the result isn't much longer (different film with same first word)
+          if (resultWords.length <= 2) {
+            return 80; // Short result starting with search word
+          }
+          // If there are many more words, it's probably a different film
+          console.log(`📊 Rejecting: "${t1}" vs "${t2}" - single word search but result has ${resultWords.length} significant words`);
+          return 25;
+        }
         
-        return {
-          available: isAvailable,
-          link: searchLink,
-          title: match.text
-        };
+        // If search word appears elsewhere (not at start), it's probably not the right film
+        // e.g., "Lucky" should NOT match "O Lucky Man!" or "Get Lucky"
+        if (resultWords.includes(searchWord)) {
+          console.log(`📊 Rejecting: "${t1}" found within "${t2}" but not at start`);
+          return 20; // Word found but not at beginning - different film
+        }
+        
+        return 10; // Single word not found properly
+      }
+      
+      // For TWO WORD searches, still be fairly strict
+      if (searchWords.length === 2) {
+        // Both words must appear at the beginning of the result
+        if (resultWords.length >= 2 && 
+            resultWords[0] === searchWords[0] && 
+            resultWords[1] === searchWords[1]) {
+          if (resultWords.length <= 3) {
+            return 85;
+          }
+          return 75; // First two words match exactly - good match even with subtitle
+        }
+        
+        // Check if all search words are in result
+        const commonWords = searchWords.filter(w => resultWords.includes(w));
+        if (commonWords.length === 2) {
+          if (resultWords.length <= 3) return 75;
+          return 50; // Both words found but result is much longer
+        }
+        
+        return 15;
+      }
+      
+      // For LONGER titles (3+ words), use word overlap
+      const commonWords = searchWords.filter(w => resultWords.includes(w));
+      const overlapRatio = commonWords.length / Math.max(searchWords.length, resultWords.length);
+      const coverageRatio = commonWords.length / searchWords.length; // How much of search is covered
+      
+      // Check if words appear in the same order at the start
+      let matchingPrefix = 0;
+      for (let i = 0; i < Math.min(searchWords.length, resultWords.length); i++) {
+        if (searchWords[i] === resultWords[i]) {
+          matchingPrefix++;
+        } else {
+          break;
+        }
+      }
+      
+      // Bonus for matching prefix
+      const prefixBonus = (matchingPrefix / searchWords.length) * 20;
+      
+      // Most of the search words should be in the result
+      if (coverageRatio >= 0.8 && overlapRatio >= 0.5) return Math.min(95, 85 + prefixBonus);
+      if (coverageRatio >= 0.6 && overlapRatio >= 0.4) return Math.min(85, 70 + prefixBonus);
+      if (coverageRatio >= 0.5) return 50 + prefixBonus / 2;
+      
+      return overlapRatio * 40;
+    };
+    
+    // Find best matching result
+    let bestMatch = null;
+    let bestScore = 0;
+    const MATCH_THRESHOLD = 70; // Require at least 70% similarity
+    
+    for (const match of allMatches) {
+      const score = calculateTitleSimilarity(searchTitle, match.text);
+      console.log(`📊 Similarity "${searchTitle}" vs "${match.text}": ${score}%`);
+      
+      if (score > bestScore && score >= MATCH_THRESHOLD) {
+        bestScore = score;
+        bestMatch = match;
       }
     }
     
-    // If no link match found, but search title appears in HTML, consider it a match
-    if (html.toLowerCase().includes(searchTitleLower)) {
-      console.log('✅ Search title found in HTML response');
+    if (bestMatch) {
+      console.log(`✅ Best matching title: "${bestMatch.text}" (${bestScore}% match)`);
       
-      const isAvailable = html.includes('ausleihbar') || html.includes('verfügbar');
+      // Check availability in the full HTML
+      const isAvailable = html.includes('ausleihbar') || 
+                         html.includes('verfügbar') ||
+                         html.includes('available');
+      
       console.log(`📊 Availability check: ${isAvailable ? 'AVAILABLE' : 'NOT AVAILABLE'}`);
       
-      if (isAvailable) {
-        // Use the start.do URL with Query parameter - this creates a fresh session AND shows results
-        const searchLink = `https://webopac.hff-muc.de/webOPACClient.hffsis/start.do?Branch=00&Query=-1=%22${encodeURIComponent(searchTitle)}%22`;
-        
-        return {
-          available: true,
-          link: searchLink,
-          title: searchTitle,
-          note: 'Found via text search'
-        };
-      }
+      // Use the start.do URL with Query parameter
+      const searchLink = `https://webopac.hff-muc.de/webOPACClient.hffsis/start.do?Branch=00&Query=-1=%22${encodeURIComponent(bestMatch.text)}%22`;
+      
+      return {
+        available: isAvailable,
+        link: searchLink,
+        title: bestMatch.text,
+        matchScore: bestScore
+      };
     }
     
-    // Check if there are any results at all
-    const hasResults = html.includes('lokale Datenbank') && 
-                      (html.includes('ausleihbar') || html.includes('verfügbar'));
-    
-    if (hasResults) {
-      console.log('⚠️ Found some results but no matching title');
+    // No good match found
+    if (allMatches.length > 0) {
+      console.log('⚠️ Found results but no title matched well enough');
       return {
         available: false,
-        note: 'Found results but no title match'
+        note: 'Found results but titles did not match closely enough'
       };
     }
     
