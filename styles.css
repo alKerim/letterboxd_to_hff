@@ -20,7 +20,7 @@
   width: 12px;
   height: 12px;
   border: 2px solid transparent;
-  border-top: 2px solid #00b020;
+  border-top: 2px solid #888;
   border-radius: 50%;
   animation: hff-spin 1s linear infinite;
 }
@@ -38,17 +38,18 @@
   z-index: 10;
   width: 16px;
   height: 16px;
-  background: #00b020;
+  background: #2d2d2d;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 8px rgba(0, 176, 32, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .hff-availability-indicator:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 176, 32, 0.4);
+  background: #3a3a3a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .hff-availability-indicator::before {
@@ -59,7 +60,7 @@
   transform: translate(-50%, -50%);
   width: 6px;
   height: 6px;
-  background: white;
+  background: #e0e0e0;
   border-radius: 50%;
 }
 

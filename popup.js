@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (isLetterboxd) {
       statusText.textContent = 'Extension is ready. Click "Scan for HFF" to check film availability.';
-      statusText.style.color = '#00b020';
+      statusText.style.color = '#333';
       scanButton.disabled = false;
       
       // Check current scan status
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     scanText.textContent = 'Scanning...';
     scanSpinner.style.display = 'block';
     statusText.textContent = 'Scanning for HFF availability...';
-    statusText.style.color = '#00b020';
+    statusText.style.color = '#333';
     
     chrome.tabs.sendMessage(tabId, {type: 'START_SCAN'}, function(response) {
       if (chrome.runtime.lastError) {
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
           scanText.textContent = 'Stop Scan';
           scanSpinner.style.display = 'none';
           statusText.textContent = `Scanning... Found ${response.processedCount} films.`;
-          statusText.style.color = '#00b020';
+          statusText.style.color = '#333';
         }
       });
     });

@@ -278,7 +278,7 @@ class HFFAvailabilityChecker {
         <span class="hff-loading-spinner"></span>
         <span class="hff-loading-text">Checking HFF library...</span>
       `;
-      indicator.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; font-size: 14px; color: #99aabb;';
+      indicator.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; font-size: 14px; color: #888;';
       
       // Insert after the title element
       element.insertAdjacentElement('afterend', indicator);
@@ -527,23 +527,26 @@ class HFFAvailabilityChecker {
         gap: 4px;
         margin-left: 12px;
         padding: 4px 10px;
-        background: linear-gradient(135deg, #2ecc71, #27ae60);
-        color: white;
+        background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+        color: #e0e0e0;
         font-size: 13px;
         font-weight: 600;
         border-radius: 4px;
         text-decoration: none;
         vertical-align: middle;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        border: 1px solid #444;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
         transition: transform 0.2s, box-shadow 0.2s;
       `;
       indicator.addEventListener('mouseenter', () => {
         indicator.style.transform = 'scale(1.05)';
-        indicator.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+        indicator.style.boxShadow = '0 4px 8px rgba(0,0,0,0.5)';
+        indicator.style.background = 'linear-gradient(135deg, #3a3a3a, #252525)';
       });
       indicator.addEventListener('mouseleave', () => {
         indicator.style.transform = 'scale(1)';
-        indicator.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+        indicator.style.boxShadow = '0 2px 4px rgba(0,0,0,0.4)';
+        indicator.style.background = 'linear-gradient(135deg, #2d2d2d, #1a1a1a)';
       });
       
       // Insert after the title element
