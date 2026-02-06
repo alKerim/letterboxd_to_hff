@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:webopac.hff-muc.de)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:adminkuhn.ch)",
+      "WebFetch(domain:connect.ebsco.com)",
+      "Bash(python3:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(kill:*)",
+      "WebFetch(domain:www.filmportal.de)",
+      "WebFetch(domain:letterboxd.com)"
+    ]
+  }
+}

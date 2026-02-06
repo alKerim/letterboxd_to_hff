@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "note": "Records that could not be matched to TMDb",
+    "count": 4
+  },
+  "records": [
+    {
+      "media_type": "DVD",
+      "scraped_at": "2026-01-28T10:51:14.521454",
+      "permalink": "https://webopac.hff-muc.de/00/bvnr/BV024087632",
+      "bvid": "BV024087632",
+      "title": "1+1-1",
+      "alt_titles": "Eins + eins - eins ; Eins plus eins minus eins",
+      "contributors": "Muranushi, Takafumi ; Higasino, Yoko [Schauspieler]",
+      "credits": "written & directed: Takafumi Muranushi. Actors: Yoko Higasino ...",
+      "notes": "Kopie von 16mm ; Länge: 12 Min. ; Orig.: Japan, 2003",
+      "extent": "1 DVD, ca. Min.; RC",
+      "language": "Japan.",
+      "source_url": "https://webopac.hff-muc.de/webOPACClient.hffsis/singleHit.do?methodToCall=showHit&curPos=1&identifier=-1_S_IG.53.19392&tab=showTitleActive",
+      "match_failure_reason": "no_match"
+    },
+    {
+      "media_type": "DVD",
+      "scraped_at": "2026-01-28T10:51:15.614849",
+      "permalink": "https://webopac.hff-muc.de/00/bvnr/BV024101777",
+      "bvid": "BV024101777",
+      "title": "1/2 Frösche ficken flink",
+      "alt_titles": "Einhalb Frösche ficken flink ; One-and-a-half frogs fuck fast",
+      "contributors": "Scheirl, Ashley Hans, 1956- [Regisseur] ; Pürrer, Ursula [Schauspieler] ; Koch, Elke [Schauspieler] ; Zeig, Sande [Schauspieler]",
+      "credits": "Hans Scheirl. With Elke Koch ; Ursula Pürrer ; Sande Zeig ...",
+      "notes": "18 Min. - Teilw. s/w. ; Orig.: Österreich 1994-1996",
+      "source_url": "https://webopac.hff-muc.de/webOPACClient.hffsis/singleHit.do?methodToCall=showHit&curPos=2&identifier=-1_S_IG.53.19392&tab=showTitleActive",
+      "match_failure_reason": "no_match"
+    },
+    {
+      "media_type": "DVD",
+      "scraped_at": "2026-01-28T10:51:17.780722",
+      "permalink": "https://webopac.hff-muc.de/00/bvnr/BV044261100",
+      "bvid": "BV044261100",
+      "title": "1 - Die weltweiten Wurzeln",
+      "fundstelle": "Teil 1",
+      "year": "2017",
+      "notes": "VHS-Überspielung: 04.2017 ; Original: 1993",
+      "extent": "1 DVD-Video (58 min)",
+      "illustrationsangaben": "farbig",
+      "zielgruppe": "$a FSK ab 12 Jahren",
+      "language": "Deutsch",
+      "source_url": "https://webopac.hff-muc.de/webOPACClient.hffsis/singleHit.do?methodToCall=showHit&curPos=4&identifier=-1_S_IG.53.19392&tab=showTitleActive",
+      "match_failure_reason": "no_match"
+    },
+    {
+      "media_type": "DVD",
+      "scraped_at": "2026-01-28T10:51:22.176560",
+      "permalink": "https://webopac.hff-muc.de/00/bvnr/BV044263276",
+      "bvid": "BV044263276",
+      "title": "2 - Der göttliche Atem",
+      "fundstelle": "Teil 2",
+      "year": "2017",
+      "notes": "VHS-Überspielung: 04.2017 ; Original: 1993",
+      "extent": "1 DVD-Video (58 min)",
+      "illustrationsangaben": "farbig",
+      "zielgruppe": "$a FSK ab 12 Jahren",
+      "language": "Deutsch",
+      "source_url": "https://webopac.hff-muc.de/webOPACClient.hffsis/singleHit.do?methodToCall=showHit&curPos=8&identifier=-1_S_IG.53.19392&tab=showTitleActive",
+      "match_failure_reason": "no_match"
+    }
+  ]
+}
